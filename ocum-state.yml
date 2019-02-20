@@ -1,0 +1,40 @@
+---
+storage:
+  # This will include a timestamp and we want the most recent
+  snapshot_pattern:  'ocum_dr*'
+  volume_junction_path: /ocum_data
+  export_policy_name:   export_policy_name
+  local:
+    controller_name: 10.0.0.133
+    vserver_name:    ocum_src
+    volume_name:     ocum_data_dr
+    nmsdk_major_version: 1
+    nmsdk_minor_version: 91
+    admin_user:         admin
+    admin_pw:           Netapp123@
+    sm_schedule:      hourly
+  remote:
+    controller_name: 10.0.0.133
+    vserver_name:    ocum_src
+    volume_name:     ocum_data
+    nmsdk_major_version: 1
+    nmsdk_minor_version: 91
+    admin_user:         admin
+    admin_pw:           Netapp123@
+    sm_schedule:      hourly
+ocum:
+  state_file_path:            '/opt/netapp/etc/ocum_dr_state'
+  set_rep_state_script:       '/opt/netapp/bin/set-ocum-rep-state.pl'
+  local_pem_file_path:        '/opt/netapp/etc/local/admin.pem'
+  local_key_file_path:        '/opt/netapp/etc/local/admin.key'
+  remote_pem_file_path:       '/opt/netapp/etc/remote/admin.pem'
+  remote_key_file_path:       '/opt/netapp/etc/remote/admin.key'
+  log_file_path:              '/opt/netapp/log/ocum_dr.log'
+  
+  # These will be reversed on respective OCUM hosts
+  local:
+    host: 10.0.0.82
+    ssh_user: root
+  remote:
+    host: 10.0.0.95
+    ssh_user: root
