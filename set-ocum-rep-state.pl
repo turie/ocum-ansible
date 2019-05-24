@@ -11,6 +11,10 @@ use Log::Log4perl qw(:easy);
 # CONSTANTS
 #####################################################################
 my $CFG_FILE = '/opt/netapp/etc/ocum-state.yml';
+
+my $TRUE    = 1;
+my $FALSE   = 0;
+
 #####################################################################
 
 #####################################################################
@@ -106,6 +110,10 @@ sub rep_state_set_active{
    # 1st we have to get the controller side ready
    # Assume SVM DR relationships
    #---------------------------------------------------------------
+   #---------------------------------------------------------------
+   # FIXME: RTU 20 Feb 2019
+   # Remove volume_name from snapmirror*
+   #---------------------------------------------------------------
    eval{
       $result = $na_server->snapmirror_get_destination(
          'destination-location'    => $cfg_r->{'storage'}{'local'}{'vserver_name'}
@@ -124,7 +132,10 @@ sub rep_state_set_active{
    }
 
    update_sm($cfg_r) if ( $params_r->{'update_sm'} );
-
+   #---------------------------------------------------------------
+   # FIXME: RTU 20 Feb 2019
+   # Remove volume_name from snapmirror*
+   #---------------------------------------------------------------
    eval{
       $result = $na_server->snapmirror_break(
          'destination-location'    =>$cfg_r->{'storage'}{'local'}{'vserver_name'}
@@ -136,7 +147,10 @@ sub rep_state_set_active{
       $logger->error("Failed to break snapmirror: " . $@);
       die;
    }
-
+   #---------------------------------------------------------------
+   # FIXME: RTU 20 Feb 2019
+   # Remove volume_name from snapmirror_get*
+   #---------------------------------------------------------------
    eval{
       $result = $na_server->snapmirror_destroy(
          'destination-location'    => $cfg_r->{'storage'}{'local'}{'vserver_name'}
@@ -151,6 +165,12 @@ sub rep_state_set_active{
       $logger->error("Failed to destroy snapmirror: " . $@);
       die;
    }
+
+   #---------------------------------------------------------------
+   # FIXME: RTU 20 Feb 2019
+   # Add custom snapmirror snapshot delete here for what will be the
+   # new snapmirror source
+   #---------------------------------------------------------------
 
    $logger->info("Searching for the latest snapshot to restore to");
    eval{
@@ -359,6 +379,11 @@ sub rep_state_resume_rep{
    # I do the release here because I may not have access to the
    # previously production controller until this is run.
    #---------------------------------------------------------------
+   #---------------------------------------------------------------
+   # FIXME: RTU 20 Feb 2019
+   # Remove volume_name from snapmirror*
+   # Add AAHS snapmirror release
+   #---------------------------------------------------------------
    eval{
       $na_server->snapmirror_release(
          'destination-location'  => $cfg_r->{'storage'}{'local'}{'vserver_name'}
@@ -369,12 +394,20 @@ sub rep_state_resume_rep{
                                     . $cfg_r->{'storage'}{'remote'}{'volume_name'},
       );
    };
-
+   #---------------------------------------------------------------
+   # FIXME: RTU 20 Feb 2019
+   # Add custom snapmirror snapshot delete here for what will be the
+   # new snapmirror destination
+   #---------------------------------------------------------------
    if ( $@ ){
       $logger->error("Failed to release snapmirror snapshots");
       # Not going to die here because I can still re-establish rep
    }
-
+   #---------------------------------------------------------------
+   # FIXME: RTU 20 Feb 2019
+   # Remove volume_name from snapmirror*
+   # Verify that the relationship type doesn't need to change
+   #---------------------------------------------------------------
    eval{
       $na_server->snapmirror_create(
          'destination-location'  => $cfg_r->{'storage'}{'local'}{'vserver_name'}
@@ -392,7 +425,10 @@ sub rep_state_resume_rep{
       $logger->error("Failed to recreate snapmirror");
       die;
    }
-
+   #---------------------------------------------------------------
+   # FIXME: RTU 20 Feb 2019
+   # Remove volume_name from snapmirror_get*
+   #---------------------------------------------------------------
    eval{
       $na_server->snapmirror_resync(
          'destination-location'  => $cfg_r->{'storage'}{'local'}{'vserver_name'}
@@ -418,6 +454,10 @@ sub set_ocum_state{
    close($state_file);
 }
 
+#---------------------------------------------------------------
+# FIXME: RTU 20 Feb 2019
+# Change this to delete ALL snapmirror snapshots in the SVM
+#---------------------------------------------------------------
 sub rm_snap{
    my ( $snap_r, $cluster_handle, $svm_name, $wfa_util ) = @_;
 
